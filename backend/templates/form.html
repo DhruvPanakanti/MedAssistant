@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+{% block title %}{{ disease_cfg.display_name }} — Medical Assistant{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Risk assessment</span>
+  <h1>{{ disease_cfg.display_name }}</h1>
+  <p>Fill in the values below. The hybrid model will combine its ML and neural-network predictions and can show which factors drove the result.</p>
+</div>
+
+<div class="card">
+  <form id="predictionForm">
+    <div class="field-grid">
+      {% for feature in features %}
+      <div class="field">
+        <label for="f_{{ loop.index }}">{{ feature }}</label>
+        <input type="number" step="any" id="f_{{ loop.index }}" name="{{ feature }}" required>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="checkbox-row">
+      <input type="checkbox" id="explainCheck">
+      <label for="explainCheck" style="margin:0;">Show explanation (SHAP)</label>
+    </div>
+    <button type="submit" class="btn btn-accent">Predict</button>
+  </form>
+
+  <div id="result" class="result-panel"></div>
+
+  <p class="disclaimer">This tool provides a statistical estimate based on historical data, not a medical diagnosis. Always consult a qualified healthcare professional about your results.</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const diseaseKey = "{{ disease_key }}";
+const form = document.getElementById("predictionForm");
+const result = document.getElementById("result");
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const formData = new FormData(form);
+  const payload = {};
+  for (const [key, value] of formData.entries()) {
+    payload[key] = parseFloat(value);
+  }
+  payload.explain = document.getElementById("explainCheck").checked;
+
+  result.className = "result-panel show";
+  result.innerHTML = "Calculating&hellip;";
+
+  const response = await fetch(`/${diseaseKey}/predict`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload)
+  });
+
+  const data = await response.json();
+  if (data.error) {
+    result.className = "result-panel show risk-high";
+    result.innerHTML = `<strong>Error:</strong> ${data.error}`;
+    return;
+  }
+
+  const riskClass = data.prediction === 1 ? "risk-high" : "risk-low";
+  result.className = `result-panel show ${riskClass}`;
+
+  let html = `<span class="result-badge">${data.risk_label}</span>`;
+  html += `<div class="prob-bar-track"><div class="prob-bar-fill" style="width:${(data.probability*100).toFixed(1)}%"></div></div>`;
+  html += `<div class="result-meta">Hybrid probability: <strong>${(data.probability*100).toFixed(1)}%</strong><br>`;
+  html += `ML model: ${(data.ml_probability*100).toFixed(1)}% &middot; DNN: ${(data.dnn_probability*100).toFixed(1)}%</div>`;
+
+  if (data.explanation) {
+    if (Array.isArray(data.explanation)) {
+      html += `<ul class="shap-list">`;
+      data.explanation.slice(0, 5).forEach(item => {
+        const cls = item.impact >= 0 ? "shap-impact-pos" : "shap-impact-neg";
+        html += `<li><span>${item.feature}</span><span class="${cls}">${item.impact > 0 ? "+" : ""}${item.impact}</span></li>`;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<div class="result-meta">${data.explanation.error || ""}</div>`;
+    }
+  }
+
+  result.innerHTML = html;
+});
+</script>
+{% endblock %}

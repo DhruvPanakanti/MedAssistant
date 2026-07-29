@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Symptom Chat — Medical Assistant{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">General guidance &middot; Not a diagnosis</span>
+  <h1>Symptom Chat</h1>
+  <p>Describe how you're feeling and get general, non-diagnostic guidance on common conditions. For anything severe, this chat will direct you to seek immediate care.</p>
+</div>
+
+<div class="chat-window">
+  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chip-row" id="chipRow">
+    <span class="chip" data-text="I have a fever and headache">Fever + headache</span>
+    <span class="chip" data-text="I have a cough and sore throat">Cough + sore throat</span>
+    <span class="chip" data-text="My stomach hurts and I feel nauseous">Stomach ache</span>
+    <span class="chip" data-text="I feel very tired lately">Fatigue</span>
+  </div>
+  <form class="chat-input-row" id="chatForm">
+    <input type="text" id="chatInput" placeholder="Describe your symptoms..." autocomplete="off" required>
+    <button type="submit" class="btn">Send</button>
+  </form>
+</div>
+<p class="disclaimer">This chat gives general self-care information for common, mild conditions only. It is not a substitute for professional medical advice, diagnosis, or treatment. If you may be experiencing a medical emergency, call your local emergency number immediately.</p>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const messages = document.getElementById("chatMessages");
+const form = document.getElementById("chatForm");
+const input = document.getElementById("chatInput");
+const chipRow = document.getElementById("chipRow");
+
+function addBubble(text, sender, urgent) {
+  const bubble = document.createElement("div");
+  bubble.className = `chat-bubble ${sender}` + (urgent ? " urgent" : "");
+  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+  messages.appendChild(bubble);
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function sendMessage(text) {
+  addBubble(text, "user");
+  input.value = "";
+
+  const response = await fetch("/chatbot/message", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message: text })
+  });
+  const data = await response.json();
+  if (data.error) {
+    addBubble("Sorry, something went wrong: " + data.error, "bot", true);
+    return;
+  }
+  addBubble(data.text, "bot", data.type === "urgent");
+}
+
+form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (text) sendMessage(text);
+});
+
+chipRow.addEventListener("click", (e) => {
+  if (e.target.classList.contains("chip")) {
+    sendMessage(e.target.dataset.text);
+  }
+});
+
+// Greeting on load
+addBubble(
+  "Hi! Tell me what symptoms you're experiencing — for example \"I have a fever and sore throat\" — and I'll share some general information. This is general information, not a medical diagnosis.",
+  "bot"
+);
+</script>
+{% endblock %}

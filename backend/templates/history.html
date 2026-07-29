@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Prediction History — Medical Assistant{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Admin</span>
+  <h1>Prediction History</h1>
+</div>
+<div class="filters">
+  <a href="/history" class="{{ 'active' if not active_filter }}">All</a>
+  {% for key, cfg in conditions.items() %}
+    <a href="/history?condition={{ key }}" class="{{ 'active' if active_filter == key }}">{{ cfg.display_name }}</a>
+  {% endfor %}
+</div>
+<div class="card" style="padding:0; overflow:hidden;">
+  <table class="history-table">
+    <tr>
+      <th>ID</th><th>Timestamp (UTC)</th><th>Condition</th><th>Input</th><th>Prediction</th><th>Probability</th><th>Result</th>
+    </tr>
+    {% for r in records %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.timestamp }}</td>
+      <td>{{ conditions.get(r.condition_key, {}).get('display_name', r.condition_key) }}</td>
+      <td>{{ r.input_json }}</td>
+      <td>{{ r.prediction }}</td>
+      <td>{{ "%.4f"|format(r.probability) if r.probability is not none else "" }}</td>
+      <td>{{ r.risk_label }}</td>
+    </tr>
+    {% endfor %}
+    {% if not records %}
+    <tr><td colspan="7" style="text-align:center; color:var(--ink-faint); padding:24px;">No predictions logged yet.</td></tr>
+    {% endif %}
+  </table>
+</div>
+{% endblock %}

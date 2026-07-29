@@ -1,0 +1,30 @@
+{
+  "diabetes": {
+    "display_name": "Diabetes",
+    "data_path": "data/diabetes.csv",
+    "target_column": "Outcome",
+    "positive_label": "High Diabetes Risk",
+    "negative_label": "Low Diabetes Risk"
+  },
+  "heart_disease": {
+    "display_name": "Heart Disease",
+    "data_path": "data/heart.csv",
+    "target_column": "target",
+    "positive_label": "Heart Disease Present",
+    "negative_label": "No Heart Disease Detected"
+  },
+  "breast_cancer": {
+    "display_name": "Breast Cancer",
+    "data_path": "data/breast_cancer.csv",
+    "target_column": "diagnosis",
+    "positive_label": "Malignant",
+    "negative_label": "Benign"
+  },
+  "liver_disease": {
+    "display_name": "Liver Disease",
+    "data_path": "data/liver_disease.csv",
+    "target_column": "liver_disease",
+    "positive_label": "Liver Disease Present",
+    "negative_label": "No Liver Disease Detected"
+  }
+}

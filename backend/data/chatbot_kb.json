@@ -1,0 +1,75 @@
+{
+  "red_flags": [
+    "chest pain", "crushing chest", "difficulty breathing", "can't breathe",
+    "cannot breathe", "shortness of breath", "severe bleeding", "won't stop bleeding",
+    "loss of consciousness", "passed out", "fainted", "unresponsive",
+    "confusion", "can't wake", "slurred speech", "face drooping",
+    "one side weakness", "one-sided weakness", "sudden numbness", "seizure",
+    "severe head injury", "coughing blood", "vomiting blood",
+    "severe abdominal pain", "suicidal", "want to die", "self harm",
+    "allergic reaction throat", "throat closing", "swelling of face and throat",
+    "high fever infant", "stiff neck", "worst headache of my life"
+  ],
+  "conditions": [
+    {
+      "name": "Common Cold",
+      "keywords": ["runny nose", "stuffy nose", "sneezing", "mild cough", "scratchy throat", "congestion", "blocked nose"],
+      "advice": "Common colds are usually viral and resolve on their own in about 7-10 days. Rest, stay hydrated, and consider warm fluids or a humidifier to ease congestion. Over-the-counter remedies can help with symptoms — check the label and follow the directions, or ask a pharmacist what's appropriate for you.",
+      "see_doctor_if": "symptoms last more than 10 days, you develop a high fever, or breathing becomes difficult."
+    },
+    {
+      "name": "Influenza (Flu)",
+      "keywords": ["flu", "body aches", "chills", "sudden fever", "fatigue and fever", "muscle aches", "high fever with cough"],
+      "advice": "Flu symptoms tend to come on suddenly and can include fever, chills, body aches, and fatigue alongside cough or sore throat. Rest and fluids are important; most healthy adults recover in about a week. Fever/pain relief options exist over the counter — a pharmacist can advise on what's suitable for you.",
+      "see_doctor_if": "you're in a high-risk group (elderly, pregnant, chronic illness), symptoms worsen after initially improving, or you have trouble breathing."
+    },
+    {
+      "name": "General Fever",
+      "keywords": ["fever", "high temperature", "feverish", "running a temperature", "hot and cold"],
+      "advice": "A fever is your body's response to fighting an infection. Rest, drink plenty of fluids, and dress lightly to help your body cool down. Monitor your temperature periodically.",
+      "see_doctor_if": "fever exceeds 103°F (39.4°C), lasts more than 3 days, or is accompanied by a rash, stiff neck, confusion, or severe pain."
+    },
+    {
+      "name": "Tension Headache / Migraine",
+      "keywords": ["headache", "migraine", "throbbing head", "head pain", "pressure in head"],
+      "advice": "Tension headaches often respond to rest, hydration, reducing screen time, and relaxing the neck and shoulders. Migraines may also benefit from a dark, quiet room. Over-the-counter pain relief can help for occasional headaches — check with a pharmacist about what's right for you.",
+      "see_doctor_if": "it's the 'worst headache of your life', comes on suddenly and severely, follows a head injury, or is accompanied by vision changes, confusion, or fever."
+    },
+    {
+      "name": "Sore Throat",
+      "keywords": ["sore throat", "throat pain", "scratchy throat", "difficulty swallowing", "painful swallowing"],
+      "advice": "Most sore throats are viral and improve within a few days. Warm salt-water gargles, throat lozenges, and warm fluids like tea with honey can soothe discomfort.",
+      "see_doctor_if": "it lasts more than a week, you have difficulty breathing or swallowing, a high fever, or white patches on the tonsils."
+    },
+    {
+      "name": "Indigestion / Upset Stomach",
+      "keywords": ["stomach ache", "stomach pain", "upset stomach", "indigestion", "bloating", "nausea", "heartburn"],
+      "advice": "Mild stomach upset often settles with small, bland meals, staying hydrated, and avoiding spicy, fatty, or heavy foods for a day or two.",
+      "see_doctor_if": "pain is severe or persistent, there's blood in vomit or stool, or you can't keep fluids down."
+    },
+    {
+      "name": "Food Poisoning",
+      "keywords": ["food poisoning", "vomiting and diarrhea", "diarrhea after eating", "stomach cramps and vomiting"],
+      "advice": "Focus on staying hydrated with small, frequent sips of water or an oral rehydration solution. Rest and reintroduce bland foods (like toast or rice) gradually as you feel better.",
+      "see_doctor_if": "symptoms last more than 2 days, you see blood, you can't keep any liquids down, or you show signs of dehydration (very dark urine, dizziness, dry mouth)."
+    },
+    {
+      "name": "Seasonal Allergies",
+      "keywords": ["allergies", "itchy eyes", "sneezing and itchy", "hay fever", "watery eyes"],
+      "advice": "Seasonal allergies respond well to avoiding known triggers, keeping windows closed on high-pollen days, and rinsing off after being outdoors. Antihistamines are commonly used — a pharmacist can advise on options.",
+      "see_doctor_if": "symptoms interfere significantly with daily life, or you notice wheezing or difficulty breathing."
+    },
+    {
+      "name": "Minor Cough",
+      "keywords": ["cough", "dry cough", "tickly cough", "coughing"],
+      "advice": "A mild, isolated cough often clears up on its own. Staying hydrated, using a humidifier, and honey (for adults and children over 1 year) can soothe throat irritation.",
+      "see_doctor_if": "the cough lasts more than 3 weeks, produces blood or thick discolored mucus, or comes with chest pain or breathlessness."
+    },
+    {
+      "name": "Fatigue",
+      "keywords": ["tired", "fatigue", "exhausted", "low energy", "no energy"],
+      "advice": "Occasional fatigue is often linked to sleep, stress, hydration, or diet. Prioritizing consistent sleep and regular meals can help.",
+      "see_doctor_if": "fatigue is persistent, unexplained, or accompanied by other symptoms like weight loss, fever, or shortness of breath."
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Medical Assistant — Conditions{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Hybrid ML + DNN &middot; Explainable</span>
+  <h1>Choose a condition to assess</h1>
+  <p>Each model combines a classical ML classifier with a neural network, weighted by validation performance, and can explain its own reasoning with SHAP. Not a diagnosis — a starting point for a conversation with a clinician.</p>
+</div>
+<div class="condition-grid">
+  {% for key, cfg in conditions.items() %}
+    <a class="condition-card" href="/{{ key }}">
+      <div class="name">{{ cfg.display_name }}</div>
+      <div class="meta">Hybrid risk assessment &rarr;</div>
+    </a>
+  {% endfor %}
+</div>
+<div class="card" style="margin-top:24px;">
+  <h3 style="margin-bottom:6px;">Not sure which condition fits your symptoms?</h3>
+  <p style="color:var(--ink-soft); margin:0 0 14px;">Describe how you're feeling in plain language and get general guidance on common conditions like fever, cold, or headache.</p>
+  <a class="btn btn-accent" href="/chatbot">Talk to the Symptom Chat</a>
+</div>
+{% endblock %}
