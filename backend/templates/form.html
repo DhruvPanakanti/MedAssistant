@@ -11,9 +11,21 @@
   <form id="predictionForm">
     <div class="field-grid">
       {% for feature in features %}
+      {% set spec = feature_specs[feature] %}
       <div class="field">
         <label for="f_{{ loop.index }}">{{ feature }}</label>
-        <input type="number" step="any" id="f_{{ loop.index }}" name="{{ feature }}" required>
+        {% if spec.type == "categorical" %}
+        <select id="f_{{ loop.index }}" name="{{ feature }}" required>
+          <option value="" disabled selected>Select&hellip;</option>
+          {% for opt in spec.options %}
+          <option value="{{ opt }}">{{ spec.option_labels[opt] }}</option>
+          {% endfor %}
+        </select>
+        {% else %}
+        <input type="number" step="{{ 1 if spec.integer else 'any' }}"
+               min="{{ spec.min }}" max="{{ spec.max }}"
+               id="f_{{ loop.index }}" name="{{ feature }}" required>
+        {% endif %}
       </div>
       {% endfor %}
     </div>
@@ -57,7 +69,11 @@ form.addEventListener("submit", async (e) => {
   const data = await response.json();
   if (data.error) {
     result.className = "result-panel show risk-high";
-    result.innerHTML = `<strong>Error:</strong> ${data.error}`;
+    const strong = document.createElement("strong");
+    strong.textContent = "Error: ";
+    result.innerHTML = "";
+    result.appendChild(strong);
+    result.appendChild(document.createTextNode(data.error));
     return;
   }
 
