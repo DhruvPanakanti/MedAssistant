@@ -5,24 +5,6 @@ assistant. The same hybrid ML+DNN+SHAP+history+login pipeline now works
 across multiple conditions — adding a new one means adding a dataset and
 a config entry, not writing new routes or new training code.
 
-## What's new in this version
-- **Redesigned UI** — a consistent visual system (`static/style.css` +
-  `templates/base.html`) across every page: deep-teal/amber-gold
-  palette, Space Grotesk + IBM Plex Sans typography, card-based layout,
-  color-coded risk results (green/red) with a probability bar and SHAP
-  contribution list, and a heartbeat-line signature motif.
-- **Fixed: login redirect bug** — visiting `/login` while already logged
-  in used to re-render the login form (looked like login "wasn't
-  working" when you clicked the nav link again after logging in). It
-  now redirects straight to `/history`. Sessions are also now marked
-  permanent (7-day cookie) so you don't get logged out mid-session.
-- **New: Symptom Chat** (`/chatbot`) — a rule-based chatbot for general,
-  common conditions (fever, cold, flu, headache, sore throat, upset
-  stomach, food poisoning, allergies, cough, fatigue). Separate from the
-  4 trained ML models — this doesn't use machine learning, it matches
-  symptom keywords against a small knowledge base and always recommends
-  professional care. See "About the Symptom Chat" below for exactly
-  what it does and doesn't do.
 
 ## About the Symptom Chat — read this before relying on it
 `chatbot.py` + `data/chatbot_kb.json` implement a **rule-based keyword
