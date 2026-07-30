@@ -11,7 +11,7 @@ from datetime import timedelta
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, flash, abort
 
 from config_loader import load_disease_config, get_disease
-from utils import predict, list_features
+from utils import predict, list_features, get_feature_specs, ValidationError
 from database import init_db, save_prediction, get_history
 from chatbot import generate_reply
 
@@ -54,22 +54,30 @@ def condition_form(disease_key):
     except ValueError:
         abort(404)
     features = list_features(disease_key)
+    feature_specs = get_feature_specs(disease_key)
     return render_template("form.html", disease_key=disease_key,
-                            disease_cfg=disease_cfg, features=features)
+                            disease_cfg=disease_cfg, features=features,
+                            feature_specs=feature_specs)
 
 
 @app.route("/<disease_key>/predict", methods=["POST"])
 def condition_predict(disease_key):
     try:
-        get_disease(disease_key)  # 404s via exception if unknown
-        data = request.get_json()
-        explain = bool(data.pop("explain", False))
+        get_disease(disease_key)
+    except ValueError as e:
+        return jsonify({"error": str(e)}), 404
 
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        return jsonify({"error": "Request body must be JSON"}), 400
+    explain = bool(data.pop("explain", False))
+
+    try:
         result = predict(disease_key, data, explain=explain)
         save_prediction(disease_key, data, result)
         return jsonify(result)
-    except ValueError as e:
-        return jsonify({"error": str(e)}), 404
+    except ValidationError as e:
+        return jsonify({"error": str(e)}), 400
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
