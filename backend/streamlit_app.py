@@ -6,7 +6,7 @@ an optional SHAP explanation.
 """
 import streamlit as st
 from config_loader import load_disease_config
-from utils import predict, list_features
+from utils import predict, list_features, get_feature_specs, ValidationError
 from database import init_db, save_prediction, get_history
 
 st.set_page_config(page_title="Medical Assistant", layout="centered")
@@ -22,20 +22,37 @@ disease_key = st.selectbox(
 )
 disease_cfg = conditions[disease_key]
 features = list_features(disease_key)
+specs = get_feature_specs(disease_key)
 
 with st.form("predict_form"):
     st.subheader(f"{disease_cfg['display_name']} — enter values")
     input_data = {}
     cols = st.columns(2)
     for i, feature in enumerate(features):
+        spec = specs[feature]
         with cols[i % 2]:
-            input_data[feature] = st.number_input(feature, value=0.0, format="%.3f")
+            if spec["type"] == "categorical":
+                input_data[feature] = st.selectbox(
+                    feature, options=spec["options"],
+                    format_func=lambda v, s=spec: s["option_labels"][v],
+                )
+            else:
+                step = 1.0 if spec["integer"] else 0.01
+                input_data[feature] = st.number_input(
+                    feature, min_value=spec["min"], max_value=spec["max"],
+                    value=spec["min"], step=step, format="%.3f",
+                )
 
     explain = st.checkbox("Show SHAP explanation")
     submitted = st.form_submit_button("Predict")
 
 if submitted:
-    result = predict(disease_key, input_data, explain=explain)
+    try:
+        result = predict(disease_key, input_data, explain=explain)
+    except ValidationError as e:
+        st.error(f"Invalid input: {e}")
+        st.stop()
+
     save_prediction(disease_key, input_data, result)
 
     st.subheader(f"Result: {result['risk_label']}")
