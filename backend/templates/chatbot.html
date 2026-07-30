@@ -30,10 +30,16 @@ const form = document.getElementById("chatForm");
 const input = document.getElementById("chatInput");
 const chipRow = document.getElementById("chipRow");
 
+function escapeHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str;
+  return div.innerHTML;
+}
+
 function addBubble(text, sender, urgent) {
   const bubble = document.createElement("div");
   bubble.className = `chat-bubble ${sender}` + (urgent ? " urgent" : "");
-  bubble.innerHTML = text.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
+  bubble.innerHTML = escapeHtml(text).replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>").replace(/\n/g, "<br>");
   messages.appendChild(bubble);
   messages.scrollTop = messages.scrollHeight;
 }
