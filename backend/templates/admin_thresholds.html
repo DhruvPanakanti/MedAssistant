@@ -4,7 +4,18 @@
 <div class="hero">
   <span class="eyebrow">Admin</span>
   <h1>Decision Thresholds</h1>
-  <p>Each condition predicts "positive" when its combined probability crosses this threshold. The default is 0.5. The recommended value is computed from validation data to balance catching true cases against false alarms — apply it only if that tradeoff fits your use case.</p>
+  <p>Controls the cutoff each condition uses to turn a probability into a "High Risk" / "Low Risk" result.</p>
+</div>
+
+<div class="card" style="margin-bottom:20px; background:var(--surface-alt);">
+  <h3 style="margin-bottom:10px;">How this works</h3>
+  <p style="margin:0 0 8px;">Every prediction produces a probability, like <strong>63%</strong>. The threshold decides where that number flips from "Low Risk" to "High Risk."</p>
+  <p style="margin:0 0 8px;">The default is <strong>0.50</strong> — a straight coin-flip cutoff. Anything at or above it is called positive; anything below is called negative.</p>
+  <ul style="margin:0 0 8px; padding-left:20px;">
+    <li><strong>Lower the threshold</strong> to catch more true cases — useful when missing a real case matters more than an occasional false alarm.</li>
+    <li><strong>Raise the threshold</strong> to only flag "High Risk" when the model is more confident — fewer false alarms, but some true cases may be missed.</li>
+  </ul>
+  <p style="margin:0;">The <strong>recommended</strong> value below isn't a guess — it's calculated from validation data for each condition to balance both sides of that tradeoff. You can use it as-is, or set your own.</p>
 </div>
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -19,10 +30,13 @@
 {% set meta = meta_by_condition[key] %}
 <div class="card" style="margin-bottom:16px;">
   <h3 style="margin-bottom:10px;">{{ cfg.display_name }}</h3>
-  <p style="color:var(--ink-soft); font-size:0.9rem; margin:0 0 14px;">
+  <p style="color:var(--ink-soft); font-size:0.9rem; margin:0 0 4px;">
     Currently applied: <strong>{{ "%.2f"|format(meta.applied_threshold) }}</strong>
     &middot; Recommended: <strong>{{ "%.2f"|format(meta.recommended_threshold) }}</strong>
     &middot; Trained on {{ meta.total_samples }} records
+  </p>
+  <p class="field-hint" style="margin:0 0 14px;">
+    A prediction needs to reach at least {{ (meta.applied_threshold * 100)|round(0, 'floor')|int }}% likelihood to be marked "High Risk."
   </p>
   <form method="POST" action="/admin/thresholds/{{ key }}" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
     <label for="threshold_{{ key }}" style="font-size:0.85rem; font-weight:600; color:var(--ink-soft);">New threshold</label>

@@ -17,7 +17,6 @@
     <div class="nav-links">
       <a href="/">Conditions</a>
       <a href="/chatbot">Symptom Chat</a>
-      <a href="/citations">Data Sources</a>
       {% if logged_in %}
         <a href="/history">History</a>
         <a href="/admin/thresholds">Thresholds</a>
@@ -34,6 +33,9 @@
   </svg>
   {% block content %}{% endblock %}
 </main>
+<footer class="site-footer">
+  <a href="/citations">Data sources</a>
+</footer>
 {% block scripts %}{% endblock %}
 </body>
 </html>

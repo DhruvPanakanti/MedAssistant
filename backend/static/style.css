@@ -170,6 +170,20 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
 }
 
 /* ---------- Hero / headings ---------- */
+.site-footer {
+  max-width: 880px;
+  margin: 40px auto 24px;
+  padding: 16px 20px 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+}
+.site-footer a {
+  font-size: 0.8rem;
+  color: var(--ink-faint);
+}
+.site-footer a:hover {
+  color: var(--primary);
+}
 .hero { padding: 28px 0 8px; }
 .hero h1 { font-size: 1.9rem; }
 .hero p { color: var(--ink-soft); max-width: 60ch; }

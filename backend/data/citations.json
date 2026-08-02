@@ -1,0 +1,30 @@
+{
+  "diabetes": {
+    "dataset_name": "Pima Indians Diabetes Database",
+    "source": "National Institute of Diabetes and Digestive and Kidney Diseases, via UCI Machine Learning Repository / Kaggle",
+    "url": "https://www.kaggle.com/datasets/uciml/pima-indians-diabetes-database",
+    "records": 768,
+    "notes": "All patients are females at least 21 years old of Pima Indian heritage."
+  },
+  "heart_disease": {
+    "dataset_name": "Heart Disease (Cleveland) Dataset",
+    "source": "UCI Machine Learning Repository, originally collected by the Cleveland Clinic Foundation (Robert Detrano, M.D., Ph.D.)",
+    "url": "https://archive.ics.uci.edu/dataset/45/heart+disease",
+    "records": 303,
+    "notes": "This project uses the commonly redistributed 14-attribute processed Cleveland subset."
+  },
+  "breast_cancer": {
+    "dataset_name": "Breast Cancer Wisconsin (Diagnostic) Dataset",
+    "source": "UCI Machine Learning Repository; distributed via scikit-learn (sklearn.datasets.load_breast_cancer)",
+    "url": "https://archive.ics.uci.edu/dataset/17/breast+cancer+wisconsin+diagnostic",
+    "records": 569,
+    "notes": "Features are computed from digitized images of fine needle aspirate (FNA) of breast masses."
+  },
+  "liver_disease": {
+    "dataset_name": "Indian Liver Patient Dataset (ILPD)",
+    "source": "UCI Machine Learning Repository",
+    "url": "https://archive.ics.uci.edu/dataset/225/ilpd+indian+liver+patient+dataset",
+    "records": 583,
+    "notes": "Collected from patients in North East Andhra Pradesh, India."
+  }
+}
