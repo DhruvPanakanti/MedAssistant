@@ -10,14 +10,17 @@
 <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<nav class="navbar">
+<a class="skip-link" href="#main-content">Skip to main content</a>
+<nav class="navbar" aria-label="Main navigation">
   <div class="navbar-inner">
-    <a class="brand" href="/"><span class="pulse-dot"></span>Medical Assistant</a>
+    <a class="brand" href="/"><span class="pulse-dot" aria-hidden="true"></span>Medical Assistant</a>
     <div class="nav-links">
       <a href="/">Conditions</a>
       <a href="/chatbot">Symptom Chat</a>
+      <a href="/citations">Data Sources</a>
       {% if logged_in %}
         <a href="/history">History</a>
+        <a href="/admin/thresholds">Thresholds</a>
         <a href="/logout">Logout</a>
       {% else %}
         <a href="/login">Admin login</a>
@@ -25,12 +28,12 @@
     </div>
   </div>
 </nav>
-<div class="page">
+<main class="page" id="main-content">
   <svg class="heartbeat" viewBox="0 0 400 28" preserveAspectRatio="none" aria-hidden="true">
     <path d="M0,14 L120,14 L136,2 L152,26 L168,14 L400,14"></path>
   </svg>
   {% block content %}{% endblock %}
-</div>
+</main>
 {% block scripts %}{% endblock %}
 </body>
 </html>

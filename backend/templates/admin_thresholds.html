@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}Decision Thresholds — Medical Assistant{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Admin</span>
+  <h1>Decision Thresholds</h1>
+  <p>Each condition predicts "positive" when its combined probability crosses this threshold. The default is 0.5. The recommended value is computed from validation data to balance catching true cases against false alarms — apply it only if that tradeoff fits your use case.</p>
+</div>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <p class="flash{% if category == 'success' %}" style="color: var(--risk-low-ink);{% else %}"{% endif %}>{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+{% for key, cfg in conditions.items() %}
+{% set meta = meta_by_condition[key] %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-bottom:10px;">{{ cfg.display_name }}</h3>
+  <p style="color:var(--ink-soft); font-size:0.9rem; margin:0 0 14px;">
+    Currently applied: <strong>{{ "%.2f"|format(meta.applied_threshold) }}</strong>
+    &middot; Recommended: <strong>{{ "%.2f"|format(meta.recommended_threshold) }}</strong>
+    &middot; Trained on {{ meta.total_samples }} records
+  </p>
+  <form method="POST" action="/admin/thresholds/{{ key }}" style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+    <label for="threshold_{{ key }}" style="font-size:0.85rem; font-weight:600; color:var(--ink-soft);">New threshold</label>
+    <input type="number" id="threshold_{{ key }}" name="threshold" min="0.01" max="0.99" step="0.01"
+           value="{{ "%.2f"|format(meta.applied_threshold) }}" style="width:100px;"
+           class="field-inline-input">
+    <button type="submit" class="btn">Apply</button>
+    <button type="submit" name="threshold" value="{{ meta.recommended_threshold }}" class="btn btn-accent" style="background:var(--surface-alt); color:var(--ink-soft); border:1px solid var(--border);">
+      Use recommended ({{ "%.2f"|format(meta.recommended_threshold) }})
+    </button>
+    <button type="submit" name="threshold" value="0.5" class="btn" style="background:var(--surface-alt); color:var(--ink-soft); border:1px solid var(--border);">
+      Reset to 0.5
+    </button>
+  </form>
+</div>
+{% endfor %}
+{% endblock %}

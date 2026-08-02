@@ -5,10 +5,13 @@ of common, low-severity conditions, flags red-flag/emergency language,
 and always recommends professional care for anything serious or
 persistent. It never gives specific drug names or dosages.
 """
+import os
 import json
 import re
 
-KB_PATH = "data/chatbot_kb.json"
+from config_loader import PROJECT_ROOT
+
+KB_PATH = os.path.join(PROJECT_ROOT, "data", "chatbot_kb.json")
 
 DISCLAIMER = (
     "This is general information, not a medical diagnosis. If you're "

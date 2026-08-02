@@ -1,8 +1,8 @@
 """
 Streamlit alternative UI — run with: streamlit run streamlit_app.py
 Lets you pick a condition, fills in a dynamic form based on that
-condition's feature list, and shows the hybrid ML+DNN prediction with
-an optional SHAP explanation.
+condition's feature list, and shows a risk assessment with an optional
+explanation of which factors influenced the result.
 """
 import streamlit as st
 from config_loader import load_disease_config
@@ -14,7 +14,7 @@ init_db()
 
 conditions = load_disease_config()
 
-st.title("Medical Assistant (Hybrid ML + DNN)")
+st.title("Medical Assistant")
 disease_key = st.selectbox(
     "Condition",
     options=list(conditions.keys()),
@@ -33,17 +33,17 @@ with st.form("predict_form"):
         with cols[i % 2]:
             if spec["type"] == "categorical":
                 input_data[feature] = st.selectbox(
-                    feature, options=spec["options"],
+                    spec["label"], options=spec["options"],
                     format_func=lambda v, s=spec: s["option_labels"][v],
                 )
             else:
                 step = 1.0 if spec["integer"] else 0.01
                 input_data[feature] = st.number_input(
-                    feature, min_value=spec["min"], max_value=spec["max"],
+                    spec["label"], min_value=spec["min"], max_value=spec["max"],
                     value=spec["min"], step=step, format="%.3f",
                 )
 
-    explain = st.checkbox("Show SHAP explanation")
+    explain = st.checkbox("Show what influenced this result")
     submitted = st.form_submit_button("Predict")
 
 if submitted:
@@ -56,13 +56,10 @@ if submitted:
     save_prediction(disease_key, input_data, result)
 
     st.subheader(f"Result: {result['risk_label']}")
-    st.write(f"Hybrid probability: **{result['probability']:.4f}**")
-    st.write(f"ML model probability: {result['ml_probability']:.4f}")
-    if result.get("dnn_probability") is not None:
-        st.write(f"DNN probability: {result['dnn_probability']:.4f}")
+    st.write(f"Estimated likelihood: **{result['probability']:.1%}**")
 
     if explain and isinstance(result.get("explanation"), list):
-        st.subheader("Top feature contributions (SHAP)")
+        st.subheader("Factors that influenced this result")
         for item in result["explanation"][:5]:
             st.write(f"- **{item['feature']}**: {item['impact']}")
 

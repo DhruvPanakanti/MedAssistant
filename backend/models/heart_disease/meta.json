@@ -1,11 +1,18 @@
 {
-  "best_ml_model": "random_forest",
   "hybrid_weights": {
-    "ml": 0.5,
-    "dnn": 0.5
+    "ml": 0.5311096856959591,
+    "dnn": 0.46889031430404104
+  },
+  "applied_threshold": 0.5,
+  "recommended_threshold": 0.7602519096192384,
+  "total_samples": 303,
+  "best_ml_model": "random_forest",
+  "best_hyperparameters": {
+    "classifier__max_depth": 5,
+    "classifier__n_estimators": 100
   },
   "validation_f1": {
-    "ml": 0.7906976744186046,
-    "dnn": 0.7906976744186046
+    "ml": 0.8372093023255814,
+    "dnn": 0.7391304347826086
   }
 }

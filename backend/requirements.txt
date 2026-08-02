@@ -8,3 +8,5 @@ tensorflow
 matplotlib
 shap
 streamlit
+reportlab
+pytest

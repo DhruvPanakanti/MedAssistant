@@ -4,7 +4,7 @@
 <div class="hero">
   <span class="eyebrow">Risk assessment</span>
   <h1>{{ disease_cfg.display_name }}</h1>
-  <p>Fill in the values below. The hybrid model will combine its ML and neural-network predictions and can show which factors drove the result.</p>
+  <p>Fill in the values below to get a risk assessment based on your inputs. Prefer to process many patients at once? <a href="/{{ disease_key }}/batch">Use batch upload</a> instead.</p>
 </div>
 
 <div class="card">
@@ -13,30 +13,34 @@
       {% for feature in features %}
       {% set spec = feature_specs[feature] %}
       <div class="field">
-        <label for="f_{{ loop.index }}">{{ feature }}</label>
+        <label for="f_{{ loop.index }}">{{ spec.label }}</label>
         {% if spec.type == "categorical" %}
-        <select id="f_{{ loop.index }}" name="{{ feature }}" required>
-          <option value="" disabled selected>Select&hellip;</option>
+        <input type="text" list="dl_f_{{ loop.index }}" id="f_{{ loop.index }}"
+               name="{{ feature }}" autocomplete="off" aria-describedby="hint_f_{{ loop.index }}"
+               placeholder="e.g. {{ spec.option_labels[spec.options[0]] }}" required>
+        <datalist id="dl_f_{{ loop.index }}">
           {% for opt in spec.options %}
-          <option value="{{ opt }}">{{ spec.option_labels[opt] }}</option>
+          <option value="{{ spec.option_labels[opt] }}">
           {% endfor %}
-        </select>
+        </datalist>
+        <span class="field-hint" id="hint_f_{{ loop.index }}">Options: {{ spec.options_display }}</span>
         {% else %}
         <input type="number" step="{{ 1 if spec.integer else 'any' }}"
-               min="{{ spec.min }}" max="{{ spec.max }}"
+               min="{{ spec.min }}" max="{{ spec.max }}" aria-describedby="hint_f_{{ loop.index }}"
                id="f_{{ loop.index }}" name="{{ feature }}" required>
+        <span class="field-hint" id="hint_f_{{ loop.index }}">Typical range: {{ spec.min|round(1) }}&ndash;{{ spec.max|round(1) }}</span>
         {% endif %}
       </div>
       {% endfor %}
     </div>
     <div class="checkbox-row">
       <input type="checkbox" id="explainCheck">
-      <label for="explainCheck" style="margin:0;">Show explanation (SHAP)</label>
+      <label for="explainCheck" style="margin:0;">Show what influenced this result</label>
     </div>
     <button type="submit" class="btn btn-accent">Predict</button>
   </form>
 
-  <div id="result" class="result-panel"></div>
+  <div id="result" class="result-panel" role="status" aria-live="polite"></div>
 
   <p class="disclaimer">This tool provides a statistical estimate based on historical data, not a medical diagnosis. Always consult a qualified healthcare professional about your results.</p>
 </div>
@@ -45,15 +49,51 @@
 {% block scripts %}
 <script>
 const diseaseKey = "{{ disease_key }}";
+const fieldTypes = { {% for feature in features %}{{ feature|tojson }}: {{ feature_specs[feature].type|tojson }}{% if not loop.last %}, {% endif %}{% endfor %} };
 const form = document.getElementById("predictionForm");
 const result = document.getElementById("result");
+let lastPayload = null;
+
+const CONFIDENCE_COPY = {
+  limited: "Based on a limited training dataset — treat this estimate with extra caution.",
+  moderate: "Based on a moderate-sized training dataset.",
+  adequate: "Based on a reasonably sized training dataset.",
+};
+
+function buildResultHtml(data) {
+  let html = `<span class="result-badge">${data.risk_label}</span>`;
+  html += `<div class="prob-bar-track"><div class="prob-bar-fill" style="width:${(data.probability*100).toFixed(1)}%"></div></div>`;
+  html += `<div class="result-meta">Estimated likelihood: <strong>${(data.probability*100).toFixed(1)}%</strong></div>`;
+
+  if (data.data_confidence && CONFIDENCE_COPY[data.data_confidence]) {
+    const cls = data.data_confidence === "limited" ? "confidence-badge limited" : "confidence-badge";
+    html += `<div class="${cls}">${CONFIDENCE_COPY[data.data_confidence]}</div>`;
+  }
+
+  if (data.explanation) {
+    if (Array.isArray(data.explanation)) {
+      html += `<div class="result-meta" style="margin-top:14px; font-weight:600;">Factors that influenced this result:</div>`;
+      html += `<ul class="shap-list">`;
+      data.explanation.slice(0, 5).forEach(item => {
+        const cls = item.impact >= 0 ? "shap-impact-pos" : "shap-impact-neg";
+        html += `<li><span>${item.feature}</span><span class="${cls}">${item.impact > 0 ? "+" : ""}${item.impact}</span></li>`;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<div class="result-meta">${data.explanation.error || ""}</div>`;
+    }
+  }
+
+  html += `<button type="button" id="downloadPdfBtn" class="btn" style="margin-top:16px;">Download PDF report</button>`;
+  return html;
+}
 
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   const formData = new FormData(form);
   const payload = {};
   for (const [key, value] of formData.entries()) {
-    payload[key] = parseFloat(value);
+    payload[key] = fieldTypes[key] === "categorical" ? value.trim() : parseFloat(value);
   }
   payload.explain = document.getElementById("explainCheck").checked;
 
@@ -77,28 +117,42 @@ form.addEventListener("submit", async (e) => {
     return;
   }
 
+  lastPayload = payload;
   const riskClass = data.prediction === 1 ? "risk-high" : "risk-low";
   result.className = `result-panel show ${riskClass}`;
+  result.innerHTML = buildResultHtml(data);
 
-  let html = `<span class="result-badge">${data.risk_label}</span>`;
-  html += `<div class="prob-bar-track"><div class="prob-bar-fill" style="width:${(data.probability*100).toFixed(1)}%"></div></div>`;
-  html += `<div class="result-meta">Hybrid probability: <strong>${(data.probability*100).toFixed(1)}%</strong><br>`;
-  html += `ML model: ${(data.ml_probability*100).toFixed(1)}% &middot; DNN: ${(data.dnn_probability*100).toFixed(1)}%</div>`;
-
-  if (data.explanation) {
-    if (Array.isArray(data.explanation)) {
-      html += `<ul class="shap-list">`;
-      data.explanation.slice(0, 5).forEach(item => {
-        const cls = item.impact >= 0 ? "shap-impact-pos" : "shap-impact-neg";
-        html += `<li><span>${item.feature}</span><span class="${cls}">${item.impact > 0 ? "+" : ""}${item.impact}</span></li>`;
-      });
-      html += `</ul>`;
-    } else {
-      html += `<div class="result-meta">${data.explanation.error || ""}</div>`;
-    }
-  }
-
-  result.innerHTML = html;
+  document.getElementById("downloadPdfBtn").addEventListener("click", downloadPdf);
 });
+
+async function downloadPdf() {
+  if (!lastPayload) return;
+  const btn = document.getElementById("downloadPdfBtn");
+  btn.disabled = true;
+  btn.textContent = "Generating…";
+
+  try {
+    const response = await fetch(`/${diseaseKey}/predict/pdf`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(lastPayload)
+    });
+    if (!response.ok) throw new Error("PDF generation failed");
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${diseaseKey}_report.pdf`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (err) {
+    alert("Could not generate the PDF report. Please try again.");
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Download PDF report";
+  }
+}
 </script>
 {% endblock %}

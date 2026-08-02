@@ -8,14 +8,15 @@
 </div>
 
 <div class="chat-window">
-  <div class="chat-messages" id="chatMessages"></div>
+  <div class="chat-messages" id="chatMessages" role="log" aria-live="polite" aria-label="Conversation"></div>
   <div class="chip-row" id="chipRow">
-    <span class="chip" data-text="I have a fever and headache">Fever + headache</span>
-    <span class="chip" data-text="I have a cough and sore throat">Cough + sore throat</span>
-    <span class="chip" data-text="My stomach hurts and I feel nauseous">Stomach ache</span>
-    <span class="chip" data-text="I feel very tired lately">Fatigue</span>
+    <button type="button" class="chip" data-text="I have a fever and headache">Fever + headache</button>
+    <button type="button" class="chip" data-text="I have a cough and sore throat">Cough + sore throat</button>
+    <button type="button" class="chip" data-text="My stomach hurts and I feel nauseous">Stomach ache</button>
+    <button type="button" class="chip" data-text="I feel very tired lately">Fatigue</button>
   </div>
   <form class="chat-input-row" id="chatForm">
+    <label for="chatInput" class="sr-only">Describe your symptoms</label>
     <input type="text" id="chatInput" placeholder="Describe your symptoms..." autocomplete="off" required>
     <button type="submit" class="btn">Send</button>
   </form>

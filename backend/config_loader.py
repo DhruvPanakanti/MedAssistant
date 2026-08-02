@@ -1,6 +1,11 @@
+import os
 import json
 
-CONFIG_PATH = "config/diseases.json"
+# Anchored to this file's own directory, not the process's current working
+# directory, so every path built from it resolves correctly regardless of
+# where `python app.py` (or pytest, or train.py) is actually launched from.
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+CONFIG_PATH = os.path.join(PROJECT_ROOT, "config", "diseases.json")
 
 
 def load_disease_config():

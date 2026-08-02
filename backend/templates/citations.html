@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block title %}Data Sources — Medical Assistant{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Transparency</span>
+  <h1>Data Sources</h1>
+  <p>Every model on this site is trained on a publicly available, de-identified research dataset. Sources are listed below for reference and verification.</p>
+</div>
+
+{% for key, cfg in conditions.items() %}
+{% set c = citation_data.get(key) %}
+{% if c %}
+<div class="card" style="margin-bottom:16px;">
+  <h3 style="margin-bottom:4px;">{{ cfg.display_name }}</h3>
+  <p style="color:var(--ink-soft); margin:0 0 10px;"><strong>{{ c.dataset_name }}</strong> &middot; {{ c.records }} records</p>
+  <p style="margin:0 0 6px;">Source: {{ c.source }}</p>
+  <p style="margin:0 0 6px;"><a href="{{ c.url }}" target="_blank" rel="noopener noreferrer">{{ c.url }}</a></p>
+  {% if c.notes %}<p style="color:var(--ink-faint); font-size:0.85rem; margin:8px 0 0;">{{ c.notes }}</p>{% endif %}
+</div>
+{% endif %}
+{% endfor %}
+
+<p class="disclaimer">These datasets are used for educational and research demonstration purposes. Predictions made by this tool reflect patterns in these specific historical datasets and populations, which may not generalize to all patients.</p>
+{% endblock %}

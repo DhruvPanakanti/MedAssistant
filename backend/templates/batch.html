@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Batch Prediction — {{ disease_cfg.display_name }}{% endblock %}
+{% block content %}
+<div class="hero">
+  <span class="eyebrow">Bulk processing</span>
+  <h1>Batch Prediction — {{ disease_cfg.display_name }}</h1>
+  <p>Upload a CSV with one row per patient (columns matching the fields below) to get predictions for all of them at once. Results download as a new CSV.</p>
+</div>
+
+<div class="card">
+  <h3 style="margin-bottom:8px;">1. Get the template</h3>
+  <p style="color:var(--ink-soft); margin:0 0 12px;">Columns required: {{ features|join(", ") }}</p>
+  <a class="btn" href="/{{ disease_key }}/batch/template.csv">Download CSV template</a>
+
+  <h3 style="margin:26px 0 8px;">2. Upload your file</h3>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        <p class="flash">{{ message }}</p>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+  <form method="POST" action="/{{ disease_key }}/batch" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".csv" required aria-label="CSV file to upload"
+           style="margin-bottom:14px; display:block;">
+    <button type="submit" class="btn btn-accent">Run batch predictions</button>
+  </form>
+  <p class="field-hint" style="margin-top:10px;">Limit: {{ row_limit }} rows per upload. Categorical fields accept either the text label (e.g. "Male") or the numeric code.</p>
+</div>
+
+<p class="disclaimer">Batch results are statistical estimates, not diagnoses, and each row is logged the same way an individual prediction would be. Always have a qualified healthcare professional review results before acting on them.</p>
+{% endblock %}

@@ -1,11 +1,17 @@
 """
 Lightweight SQLite storage for prediction history across all conditions.
 """
+import os
 import sqlite3
 import json
 from datetime import datetime, timezone
 
-DB_PATH = "predictions.db"
+# Anchored to this file's own directory, not the process's current working
+# directory — otherwise running the app from a different folder (a
+# shortcut, an IDE run config, a different terminal location) silently
+# creates/reads a *different* predictions.db elsewhere, and history
+# appears to vanish even though nothing was actually lost.
+DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "predictions.db")
 
 
 def init_db():

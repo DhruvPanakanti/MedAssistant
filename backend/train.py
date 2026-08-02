@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import tensorflow as tf
 
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
+from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold, GridSearchCV
 from sklearn.preprocessing import StandardScaler
 from imblearn.pipeline import Pipeline
 from imblearn.over_sampling import SMOTE
@@ -34,7 +34,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 
 from dl_model import build_dnn
-from config_loader import load_disease_config
+from config_loader import load_disease_config, PROJECT_ROOT
 
 RANDOM_STATE = 42
 np.random.seed(RANDOM_STATE)
@@ -68,20 +68,49 @@ def get_ml_models():
     }
 
 
-def cross_validate_ml_models(X_trainval, y_trainval):
+PARAM_GRIDS = {
+    "logistic_regression": {"classifier__C": [0.01, 0.1, 1, 10]},
+    "decision_tree": {
+        "classifier__max_depth": [3, 5, 10, None],
+        "classifier__min_samples_leaf": [1, 5, 10],
+    },
+    "random_forest": {
+        "classifier__n_estimators": [100, 200],
+        "classifier__max_depth": [5, 10, None],
+    },
+    "gradient_boosting": {
+        "classifier__n_estimators": [100, 200],
+        "classifier__learning_rate": [0.05, 0.1],
+    },
+}
+
+
+def tune_ml_models(X_trainval, y_trainval):
+    """Grid-searches hyperparameters for each ML model type via 5-fold CV,
+    scoring by F1. Returns a comparison table (for reporting/selection) and
+    the best-found hyperparameters per model type, so the winning model can
+    be refit cleanly on whichever data split is needed downstream (a
+    train-only split for validation-based hybrid weighting, and the full
+    train+val pool for the deployed model) without leaking validation data
+    into a model that will be evaluated on it."""
     cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=RANDOM_STATE)
     rows = []
-    for name, model in get_ml_models().items():
-        f1_scores = cross_val_score(model, X_trainval, y_trainval, cv=cv, scoring="f1")
-        auc_scores = cross_val_score(model, X_trainval, y_trainval, cv=cv, scoring="roc_auc")
+    best_params_per_model = {}
+    for name, pipeline in get_ml_models().items():
+        grid = GridSearchCV(pipeline, PARAM_GRIDS[name], cv=cv, scoring="f1", n_jobs=-1)
+        grid.fit(X_trainval, y_trainval)
+        auc_scores = cross_val_score(grid.best_estimator_, X_trainval, y_trainval, cv=cv, scoring="roc_auc")
+        std = grid.cv_results_["std_test_score"][grid.best_index_]
         rows.append({
             "model": name,
-            "f1_mean": f1_scores.mean(), "f1_std": f1_scores.std(),
+            "f1_mean": grid.best_score_, "f1_std": std,
             "roc_auc_mean": auc_scores.mean(), "roc_auc_std": auc_scores.std(),
         })
-        print(f"  {name}: F1 = {f1_scores.mean():.4f} +/- {f1_scores.std():.4f}, "
-              f"ROC-AUC = {auc_scores.mean():.4f} +/- {auc_scores.std():.4f}")
-    return pd.DataFrame(rows).set_index("model")
+        best_params_per_model[name] = grid.best_params_
+        print(f"  {name}: F1 = {grid.best_score_:.4f} +/- {std:.4f}, "
+              f"ROC-AUC = {auc_scores.mean():.4f} +/- {auc_scores.std():.4f}, "
+              f"best params = {grid.best_params_}")
+    return pd.DataFrame(rows).set_index("model"), best_params_per_model
 
 
 def evaluate_model(name, y_test, y_pred, y_prob):
@@ -166,34 +195,37 @@ def plot_comparison_table(results_df, path, title):
 def train_condition(disease_key, disease_cfg):
     print(f"\n{'=' * 60}\nTraining: {disease_cfg['display_name']} ({disease_key})\n{'=' * 60}")
 
-    model_dir = os.path.join("models", disease_key)
-    report_dir = os.path.join("reports", disease_key)
+    model_dir = os.path.join(PROJECT_ROOT, "models", disease_key)
+    report_dir = os.path.join(PROJECT_ROOT, "reports", disease_key)
     os.makedirs(model_dir, exist_ok=True)
     os.makedirs(report_dir, exist_ok=True)
 
-    df = pd.read_csv(disease_cfg["data_path"])
+    df = pd.read_csv(os.path.join(PROJECT_ROOT, disease_cfg["data_path"]))
     target_col = disease_cfg["target_column"]
     X = df.drop(columns=[target_col])
     y = df[target_col]
+    total_samples = len(df)
 
     X_trainval, X_test, y_trainval, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y
     )
 
-    print("\n5-fold cross-validation (train+val pool):")
-    cv_df = cross_validate_ml_models(X_trainval, y_trainval)
+    print("\nGrid-searching hyperparameters (5-fold CV, train+val pool):")
+    cv_df, best_params_per_model = tune_ml_models(X_trainval, y_trainval)
     cv_df.to_csv(os.path.join(report_dir, "cv_comparison.csv"))
     plot_comparison_table(cv_df, os.path.join(report_dir, "cv_comparison.png"),
-                           f"{disease_cfg['display_name']} - 5-Fold CV")
+                           f"{disease_cfg['display_name']} - 5-Fold CV (tuned)")
 
     best_ml_name = cv_df["f1_mean"].idxmax()
-    print(f"\nBest ML model by CV F1: {best_ml_name}")
+    best_params = best_params_per_model[best_ml_name]
+    print(f"\nBest ML model by CV F1: {best_ml_name} | params: {best_params}")
 
     X_train, X_val, y_train, y_val = train_test_split(
         X_trainval, y_trainval, test_size=0.2, random_state=RANDOM_STATE, stratify=y_trainval
     )
 
     best_ml_model = get_ml_models()[best_ml_name]
+    best_ml_model.set_params(**best_params)
     best_ml_model.fit(X_train, y_train)
     ml_val_prob = best_ml_model.predict_proba(X_val)[:, 1]
     ml_val_f1 = f1_score(y_val, (ml_val_prob >= 0.5).astype(int))
@@ -209,7 +241,20 @@ def train_condition(disease_key, disease_cfg):
     w_ml, w_dnn = (0.5, 0.5) if total == 0 else (ml_val_f1 / total, dnn_val_f1 / total)
     print(f"Hybrid weights -> ML: {w_ml:.3f}, DNN: {w_dnn:.3f}")
 
+    # Recommended decision threshold: the point on the validation ROC curve
+    # that maximizes Youden's J (tpr - fpr), rather than always cutting at
+    # 0.5. This is a *recommendation* saved alongside a separate, always-
+    # overridable "applied" threshold (default 0.5) an admin can tune from
+    # the UI without retraining — see /admin/thresholds in app.py.
+    hybrid_val_prob = w_ml * ml_val_prob + w_dnn * dnn_val_prob
+    fpr_v, tpr_v, thresh_v = roc_curve(y_val, hybrid_val_prob)
+    youden_j = tpr_v - fpr_v
+    recommended_threshold = float(thresh_v[np.argmax(youden_j)])
+    recommended_threshold = min(max(recommended_threshold, 0.05), 0.95)
+    print(f"Recommended decision threshold (Youden's J): {recommended_threshold:.3f}")
+
     final_ml_model = get_ml_models()[best_ml_name]
+    final_ml_model.set_params(**best_params)
     final_ml_model.fit(X_trainval, y_trainval)
 
     final_scaler = StandardScaler().fit(X_trainval)
@@ -259,11 +304,22 @@ def train_condition(disease_key, disease_cfg):
     background = X_trainval.sample(min(100, len(X_trainval)), random_state=RANDOM_STATE)
     joblib.dump(background, os.path.join(model_dir, "shap_background.pkl"))
 
-    with open(os.path.join(model_dir, "meta.json"), "w") as f:
+    meta_path = os.path.join(model_dir, "meta.json")
+    existing_applied_threshold = 0.5
+    if os.path.exists(meta_path):
+        with open(meta_path) as f:
+            existing_meta = json.load(f)
+        existing_applied_threshold = existing_meta.get("applied_threshold", 0.5)
+
+    with open(meta_path, "w") as f:
         json.dump({
             "best_ml_model": best_ml_name,
+            "best_hyperparameters": best_params,
             "hybrid_weights": {"ml": w_ml, "dnn": w_dnn},
-            "validation_f1": {"ml": ml_val_f1, "dnn": dnn_val_f1}
+            "validation_f1": {"ml": ml_val_f1, "dnn": dnn_val_f1},
+            "recommended_threshold": recommended_threshold,
+            "applied_threshold": existing_applied_threshold,
+            "total_samples": total_samples,
         }, f, indent=2)
 
     print(f"\nSaved models -> {model_dir}/, reports -> {report_dir}/")
