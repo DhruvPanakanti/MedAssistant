@@ -1,0 +1,76 @@
+{
+  "diabetes": {
+    "eat_more": [
+      "Leafy greens (spinach, kale)",
+      "Whole grains (oats, brown rice, quinoa)",
+      "Legumes (beans, lentils, chickpeas)",
+      "Berries and other low-glycemic fruits",
+      "Nuts and seeds (in moderation)"
+    ],
+    "limit": [
+      "Sugary drinks and sweets",
+      "Refined carbohydrates (white bread, pastries)",
+      "Fried and heavily processed foods"
+    ],
+    "lifestyle": [
+      "Regular physical activity (e.g. 150 minutes/week of moderate exercise)",
+      "Maintaining a healthy weight",
+      "Routine blood sugar monitoring as advised by a doctor"
+    ]
+  },
+  "heart_disease": {
+    "eat_more": [
+      "Fatty fish (salmon, mackerel) for omega-3s",
+      "Leafy greens and colorful vegetables",
+      "Whole grains",
+      "Nuts and seeds",
+      "Olive oil in place of butter/ghee"
+    ],
+    "limit": [
+      "Saturated and trans fats",
+      "Excess sodium (salty/processed foods)",
+      "Red and processed meats",
+      "Sugary foods and drinks"
+    ],
+    "lifestyle": [
+      "Regular aerobic exercise",
+      "Avoiding tobacco and limiting alcohol",
+      "Managing stress and blood pressure"
+    ]
+  },
+  "breast_cancer": {
+    "eat_more": [
+      "A variety of fruits and vegetables",
+      "Whole grains",
+      "Fiber-rich foods"
+    ],
+    "limit": [
+      "Alcohol consumption",
+      "Processed and red meats",
+      "High-fat, high-sugar foods"
+    ],
+    "lifestyle": [
+      "Regular physical activity",
+      "Maintaining a healthy weight",
+      "Routine screening as recommended by a doctor"
+    ]
+  },
+  "liver_disease": {
+    "eat_more": [
+      "Vegetables and fruits",
+      "Whole grains",
+      "Lean protein (fish, poultry, legumes)"
+    ],
+    "limit": [
+      "Alcohol",
+      "Fried and fatty foods",
+      "Added sugars and sugary drinks",
+      "Excess salt"
+    ],
+    "lifestyle": [
+      "Maintaining a healthy weight",
+      "Avoiding unnecessary supplements/medications without medical advice",
+      "Regular checkups and liver function monitoring"
+    ]
+  }
+}

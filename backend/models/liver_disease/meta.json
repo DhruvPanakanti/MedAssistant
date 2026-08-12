@@ -1,11 +1,18 @@
 {
-  "best_ml_model": "random_forest",
+  "best_ml_model": "gradient_boosting",
+  "best_hyperparameters": {
+    "classifier__learning_rate": 0.1,
+    "classifier__n_estimators": 200
+  },
   "hybrid_weights": {
-    "ml": 0.5001303780964798,
-    "dnn": 0.49986962190352024
+    "ml": 0.4866210329807094,
+    "dnn": 0.5133789670192906
   },
   "validation_f1": {
-    "ml": 0.7887323943661971,
-    "dnn": 0.7883211678832117
-  }
+    "ml": 0.7555555555555555,
+    "dnn": 0.7971014492753623
+  },
+  "recommended_threshold": 0.8489243907863029,
+  "applied_threshold": 0.5,
+  "total_samples": 579
 }

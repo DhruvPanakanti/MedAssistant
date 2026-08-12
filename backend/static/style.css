@@ -335,16 +335,16 @@ a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible
   gap: 4px;
 }
 .shap-list li {
-  display: flex;
-  justify-content: space-between;
   font-size: 0.85rem;
-  padding: 6px 10px;
+  padding: 8px 12px;
   background: var(--surface);
   border-radius: var(--radius-sm);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--border);
+  line-height: 1.5;
 }
-.shap-impact-pos { color: var(--risk-high-ink); font-weight: 600; }
-.shap-impact-neg { color: var(--risk-low-ink); font-weight: 600; }
+.shap-list li.shap-impact-pos { border-left-color: var(--risk-high-ink); }
+.shap-list li.shap-impact-neg { border-left-color: var(--risk-low-ink); }
 
 .disclaimer {
   font-size: 0.78rem;
@@ -491,4 +491,27 @@ table.history-table tr:hover td { background: var(--surface-alt); }
   .page { padding: 0 16px 40px; }
   .hero h1 { font-size: 1.5rem; }
   .chat-window { height: 420px; }
+}
+
+/* ---------- Lifestyle tips ---------- */
+.tips-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 20px;
+}
+.tips-heading {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 8px;
+  color: var(--ink);
+}
+.tips-heading-good { color: var(--risk-low-ink); }
+.tips-heading-limit { color: var(--risk-high-ink); }
+.tips-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 0.85rem;
+  color: var(--ink-soft);
+  line-height: 1.7;
 }
