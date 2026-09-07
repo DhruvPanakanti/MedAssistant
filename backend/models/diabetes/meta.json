@@ -1,11 +1,18 @@
 {
-  "best_ml_model": "logistic_regression",
+  "best_ml_model": "random_forest",
+  "best_hyperparameters": {
+    "classifier__max_depth": 10,
+    "classifier__n_estimators": 100
+  },
   "hybrid_weights": {
-    "ml": 0.5122634898388227,
-    "dnn": 0.48773651016117725
+    "ml": 0.5134938001458789,
+    "dnn": 0.486506199854121
   },
   "validation_f1": {
-    "ml": 0.7083333333333334,
-    "dnn": 0.6744186046511628
-  }
+    "ml": 0.6956521739130435,
+    "dnn": 0.6590909090909091
+  },
+  "recommended_threshold": 0.32122059124489166,
+  "applied_threshold": 0.5,
+  "total_samples": 768
 }

@@ -32,7 +32,7 @@ def _display_value(spec, raw_value):
     return str(raw_value)
 
 
-def generate_prediction_pdf(disease_key, disease_cfg, input_data, result):
+def generate_prediction_pdf(disease_key, disease_cfg, input_data, result, tips=None):
     specs = get_feature_specs(disease_key)
     buffer = io.BytesIO()
     doc = SimpleDocTemplate(
@@ -90,19 +90,32 @@ def generate_prediction_pdf(disease_key, disease_cfg, input_data, result):
 
     if isinstance(result.get("explanation"), list) and result["explanation"]:
         story.append(Paragraph("Factors That Influenced This Result", section_style))
-        exp_data = [["Factor", "Impact"]]
+        bullet_style = ParagraphStyle("Bullet", parent=body_style, fontSize=9.5,
+                                       leftIndent=12, spaceAfter=5, leading=13)
         for item in result["explanation"][:5]:
-            exp_data.append([item["feature"], f"{item['impact']:+.4f}"])
-        exp_table = Table(exp_data, colWidths=[3 * inch, 3 * inch])
-        exp_table.setStyle(TableStyle([
-            ("BACKGROUND", (0, 0), (-1, 0), header_bg),
-            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
-            ("FONTSIZE", (0, 0), (-1, -1), 9),
-            ("GRID", (0, 0), (-1, -1), 0.5, border_color),
-            ("TOPPADDING", (0, 0), (-1, -1), 5),
-            ("BOTTOMPADDING", (0, 0), (-1, -1), 5),
-        ]))
-        story.append(exp_table)
+            story.append(Paragraph(f"\u2022 {item.get('text', item['feature'])}", bullet_style))
+
+    if tips:
+        story.append(Paragraph("General Lifestyle Tips", section_style))
+        tips_intro_style = ParagraphStyle("TipsIntro", parent=body_style, fontSize=8.5,
+                                           textColor=colors.grey, spaceAfter=8)
+        story.append(Paragraph(
+            "General, non-personalized information. Not a substitute for advice "
+            "from a doctor or registered dietitian.", tips_intro_style
+        ))
+        tip_bullet_style = ParagraphStyle("TipBullet", parent=body_style, fontSize=9.5,
+                                           leftIndent=12, spaceAfter=4, leading=13)
+        sections = [
+            ("Consider eating more of:", tips.get("eat_more", [])),
+            ("Consider limiting:", tips.get("limit", [])),
+            ("Other lifestyle factors:", tips.get("lifestyle", [])),
+        ]
+        for heading, items in sections:
+            if not items:
+                continue
+            story.append(Paragraph(f"<b>{heading}</b>", tip_bullet_style))
+            for i in items:
+                story.append(Paragraph(f"\u2022 {i}", tip_bullet_style))
 
     story.append(Spacer(1, 20))
     story.append(HRFlowable(width="100%", color=border_color))

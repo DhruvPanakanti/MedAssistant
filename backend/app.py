@@ -10,14 +10,22 @@ import os
 import io
 import csv
 import json
+import logging
 from datetime import timedelta
 from flask import Flask, request, jsonify, render_template, session, redirect, url_for, flash, abort, Response, send_file
+
+# So gemini_chat.py's diagnostic messages (why the chatbot fell back to
+# the rule-based matcher) are actually visible in the console when
+# running `python app.py`, rather than silently suppressed by Python's
+# default logging level.
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 from config_loader import load_disease_config, get_disease, PROJECT_ROOT
 from utils import predict, list_features, get_feature_specs, ValidationError, get_meta, set_applied_threshold
 from database import init_db, save_prediction, get_history
 from chatbot import generate_reply
 from pdf_report import generate_prediction_pdf
+from lifestyle_tips import get_lifestyle_tips
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret-change-me")
@@ -59,9 +67,10 @@ def condition_form(disease_key):
         abort(404)
     features = list_features(disease_key)
     feature_specs = get_feature_specs(disease_key)
+    tips = get_lifestyle_tips(disease_key)
     return render_template("form.html", disease_key=disease_key,
                             disease_cfg=disease_cfg, features=features,
-                            feature_specs=feature_specs)
+                            feature_specs=feature_specs, tips=tips)
 
 
 @app.route("/<disease_key>/predict", methods=["POST"])
@@ -197,7 +206,8 @@ def condition_predict_pdf(disease_key):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-    buffer = generate_prediction_pdf(disease_key, disease_cfg, data, result)
+    tips = get_lifestyle_tips(disease_key)
+    buffer = generate_prediction_pdf(disease_key, disease_cfg, data, result, tips=tips)
     return send_file(buffer, mimetype="application/pdf", as_attachment=True,
                       download_name=f"{disease_key}_report.pdf")
 

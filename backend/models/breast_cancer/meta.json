@@ -1,11 +1,17 @@
 {
   "best_ml_model": "logistic_regression",
+  "best_hyperparameters": {
+    "classifier__C": 0.1
+  },
   "hybrid_weights": {
-    "ml": 0.5035971223021583,
-    "dnn": 0.4964028776978417
+    "ml": 0.49955396966993754,
+    "dnn": 0.5004460303300624
   },
   "validation_f1": {
-    "ml": 0.9565217391304348,
+    "ml": 0.9411764705882353,
     "dnn": 0.9428571428571428
-  }
+  },
+  "recommended_threshold": 0.6998833719535469,
+  "applied_threshold": 0.5,
+  "total_samples": 569
 }

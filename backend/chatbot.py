@@ -10,6 +10,7 @@ import json
 import re
 
 from config_loader import PROJECT_ROOT
+from gemini_chat import get_llm_reply
 
 KB_PATH = os.path.join(PROJECT_ROOT, "data", "chatbot_kb.json")
 
@@ -81,6 +82,15 @@ def generate_reply(message):
             ),
             "matches": []
         }
+
+    # Optional LLM-backed conversational layer (Gemini). Only reached
+    # after the hardcoded red-flag check above. Returns None -- and we
+    # silently fall through to the rule-based knowledge base below -- if
+    # no API key is configured or the call fails for any reason, so the
+    # chatbot always works even without Gemini set up.
+    llm_text = get_llm_reply(message)
+    if llm_text is not None:
+        return {"type": "ai_response", "text": llm_text, "matches": []}
 
     matches = match_conditions(message)
     if not matches:

@@ -4,7 +4,7 @@
     "dnn": 0.46889031430404104
   },
   "applied_threshold": 0.5,
-  "recommended_threshold": 0.7602519096192384,
+  "recommended_threshold": 0.7601747514065766,
   "total_samples": 303,
   "best_ml_model": "random_forest",
   "best_hyperparameters": {

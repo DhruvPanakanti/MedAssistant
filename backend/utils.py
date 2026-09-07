@@ -33,7 +33,7 @@ CATEGORY_LABELS = {
             0: "Typical angina", 1: "Atypical angina",
             2: "Non-anginal pain", 3: "Asymptomatic",
         },
-        "fbs": {0: "No (\u2264120 mg/dl)", 1: "Yes (>120 mg/dl)"},
+        "fbs": {0: "No", 1: "Yes"},
         "restecg": {
             0: "Normal", 1: "ST-T wave abnormality",
             2: "Left ventricular hypertrophy",
@@ -44,6 +44,21 @@ CATEGORY_LABELS = {
             0: "0 vessels", 1: "1 vessel", 2: "2 vessels",
             3: "3 vessels", 4: "4 vessels (rare in training data)",
         },
+        # "thal" is deliberately NOT labeled here. The source dataset
+        # (kb22/Heart-Disease-Prediction on GitHub) uses raw codes 0-3
+        # with no documented meaning anywhere in that repo. Published
+        # mappings for similarly-named heart disease datasets disagree
+        # with each other (some say 0=Normal/1=Fixed/2=Reversible, only
+        # covering 3 values; others say 1=Fixed/2=Normal/3=Reversible;
+        # the original UCI Statlog docs use an unrelated 3/6/7 scale) —
+        # and none of them account for all 4 values actually present in
+        # this file. A correlation check against our own data (value 2
+        # has by far the lowest heart-disease rate, consistent with
+        # "Normal") supports a partial guess, but not a confident
+        # assignment of "Fixed" vs "Reversible" between values 1 and 3.
+        # Showing a wrong clinical label would be worse than showing a
+        # plain number, so this stays unlabeled until the source
+        # encoding can be confirmed authoritatively.
     },
     "liver_disease": {
         "Gender": {0: "Female", 1: "Male"},
@@ -68,7 +83,7 @@ FEATURE_LABELS = {
         "oldpeak": "ST Depression (Exercise vs Rest)",
         "slope": "ST Segment Slope",
         "ca": "Major Vessels Colored by Fluoroscopy",
-        "thal": "Thalassemia Test Result",
+        "thal": "Thalassemia Test Result (raw lab code, 0-3 \u2014 enter as reported)",
     },
     "liver_disease": {
         "Alamine_Aminotransferase": "Alamine Aminotransferase (ALT)",
@@ -80,7 +95,16 @@ FEATURE_LABELS = {
 
 
 def _humanize(name):
-    return name.replace("_", " ").strip().title()
+    """Turns a raw column name into a readable label: snake_case and
+    camelCase both get split into separate words, and all-caps acronyms
+    (e.g. "BMI") are preserved instead of being mangled to "Bmi"."""
+    s = name.replace("_", " ")
+    s = re.sub(r"(?<=[a-z0-9])(?=[A-Z])", " ", s)      # lower->Upper boundary
+    s = re.sub(r"(?<=[A-Z])(?=[A-Z][a-z])", " ", s)    # ACRONYMWord -> ACRONYM Word
+    words = []
+    for w in s.split():
+        words.append(w if w.isupper() else (w[:1].upper() + w[1:].lower()))
+    return " ".join(words).strip()
 
 
 def get_feature_label(disease_key, feature):
@@ -388,9 +412,61 @@ def explain_prediction(disease_key, X_input, ml_model, feature_columns):
 
         values = _extract_row_values(shap_values)
         contributions = sorted(zip(feature_columns, values), key=lambda x: abs(x[1]), reverse=True)
-        return [
-            {"feature": get_feature_label(disease_key, f), "impact": round(float(v), 4)}
-            for f, v in contributions
-        ]
+        max_abs_impact = max((abs(v) for _, v in contributions), default=0)
+
+        specs = get_feature_specs(disease_key)
+        results = []
+        for f, v in contributions:
+            spec = specs.get(f, {})
+            raw_value = X_input[f].iloc[0]
+            display_value = _display_feature_value(spec, raw_value)
+            direction = "increased" if v > 0 else "decreased" if v < 0 else "had little effect on"
+            magnitude = _magnitude_word(abs(v), max_abs_impact)
+            label = get_feature_label(disease_key, f)
+
+            if direction == "had little effect on":
+                sentence = f"{label} ({display_value}) had little effect on the result."
+            else:
+                sentence = f"{label} ({display_value}) {magnitude} {direction} the risk."
+
+            results.append({
+                "feature": label,
+                "value": display_value,
+                "impact": round(float(v), 4),
+                "text": sentence,
+            })
+        return results
     except Exception as e:
         return {"error": f"Explanation unavailable: {e}"}
+
+
+def _display_feature_value(spec, raw_value):
+    """Turns a raw numeric value back into something readable -- the option
+    label for a categorical field (e.g. "Male" instead of 1), or a cleanly
+    rounded number otherwise."""
+    if spec.get("type") == "categorical":
+        try:
+            code = int(float(raw_value))
+        except (TypeError, ValueError):
+            return str(raw_value)
+        return spec.get("option_labels", {}).get(code, str(raw_value))
+    try:
+        num = float(raw_value)
+        return str(int(num)) if num == int(num) else f"{num:.1f}"
+    except (TypeError, ValueError):
+        return str(raw_value)
+
+
+def _magnitude_word(abs_impact, max_abs_impact):
+    """Classifies a factor's influence relative to the strongest factor in
+    THIS explanation -- SHAP values aren't comparable in absolute terms
+    across conditions or models, so magnitude is judged relative to its
+    own explanation, not against a fixed number."""
+    if max_abs_impact == 0:
+        return "slightly"
+    ratio = abs_impact / max_abs_impact
+    if ratio >= 0.66:
+        return "strongly"
+    if ratio >= 0.33:
+        return "moderately"
+    return "slightly"

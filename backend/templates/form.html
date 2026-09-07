@@ -44,6 +44,41 @@
 
   <p class="disclaimer">This tool provides a statistical estimate based on historical data, not a medical diagnosis. Always consult a qualified healthcare professional about your results.</p>
 </div>
+
+{% if tips %}
+<div class="card" style="margin-top:20px;">
+  <h3 style="margin-bottom:4px;">General Lifestyle Tips</h3>
+  <p style="color:var(--ink-faint); font-size:0.82rem; margin:0 0 14px;">
+    General, non-personalized information — not a substitute for advice from a doctor or registered dietitian.
+  </p>
+  <div class="tips-grid">
+    {% if tips.eat_more %}
+    <div>
+      <div class="tips-heading tips-heading-good">Consider eating more of</div>
+      <ul class="tips-list">
+        {% for item in tips.eat_more %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% if tips.limit %}
+    <div>
+      <div class="tips-heading tips-heading-limit">Consider limiting</div>
+      <ul class="tips-list">
+        {% for item in tips.limit %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+    {% if tips.lifestyle %}
+    <div>
+      <div class="tips-heading">Other lifestyle factors</div>
+      <ul class="tips-list">
+        {% for item in tips.lifestyle %}<li>{{ item }}</li>{% endfor %}
+      </ul>
+    </div>
+    {% endif %}
+  </div>
+</div>
+{% endif %}
 {% endblock %}
 
 {% block scripts %}
@@ -75,8 +110,8 @@ function buildResultHtml(data) {
       html += `<div class="result-meta" style="margin-top:14px; font-weight:600;">Factors that influenced this result:</div>`;
       html += `<ul class="shap-list">`;
       data.explanation.slice(0, 5).forEach(item => {
-        const cls = item.impact >= 0 ? "shap-impact-pos" : "shap-impact-neg";
-        html += `<li><span>${item.feature}</span><span class="${cls}">${item.impact > 0 ? "+" : ""}${item.impact}</span></li>`;
+        const cls = item.impact > 0 ? "shap-impact-pos" : item.impact < 0 ? "shap-impact-neg" : "";
+        html += `<li class="factor-item ${cls}">${item.text}</li>`;
       });
       html += `</ul>`;
     } else {
