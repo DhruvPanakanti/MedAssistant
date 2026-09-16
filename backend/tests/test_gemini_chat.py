@@ -64,6 +64,32 @@ def test_mocked_on_topic_reply_passes_through(monkeypatch):
     _clear_gemini_state()
 
 
+def test_automatic_function_calling_is_disabled(monkeypatch):
+    """We never give Gemini tools/functions to call, so Automatic
+    Function Calling has nothing to do here -- it should stay
+    explicitly disabled to avoid the SDK's noisy console warnings on
+    every single request."""
+    _clear_gemini_state()
+    os.environ["GEMINI_API_KEY"] = "fake-key-for-test"
+
+    captured_config = {}
+
+    def fake_generate_content(model, contents, config):
+        captured_config["config"] = config
+        return _FakeResponse("A reply.")
+
+    fake_client = MagicMock()
+    fake_client.models.generate_content = fake_generate_content
+    gemini_chat._client = fake_client
+
+    gemini_chat.get_llm_reply("What is diabetes?")
+
+    afc = captured_config["config"].automatic_function_calling
+    assert afc is not None
+    assert afc.disable is True
+    _clear_gemini_state()
+
+
 def test_thinking_config_matches_model_generation():
     """Regression test: Gemini 2.x and Gemini 3.x use two different,
     MUTUALLY EXCLUSIVE thinking-control parameters -- sending the wrong

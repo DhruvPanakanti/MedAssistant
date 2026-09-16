@@ -98,7 +98,10 @@ LLM-backed conversational layer, in that order:
    generation from its name and sends the correct parameter
    automatically, so switching `GEMINI_MODEL` between generations (as
    this project has already needed to do once) doesn't break the
-   chatbot.
+   chatbot. Automatic Function Calling is also explicitly disabled,
+   since this is a single stateless text call with no tools/functions
+   for Gemini to invoke — leaving it on just adds noisy "AFC is
+   enabled" console warnings on every request for no benefit.
 3. **Rule-based fallback (`data/chatbot_kb.json`).** If no API key is
    configured, or the Gemini call fails for any reason, the chatbot
    silently falls back to matching the message against a small,
@@ -144,6 +147,16 @@ installed, and finally makes a real test call to Gemini — reporting the
 exact point of failure instead of a raw traceback. When the app itself
 is running (`python app.py`), the same underlying failures are also
 logged to the console.
+
+**One failure that's expected occasionally and isn't a bug:** a `503
+UNAVAILABLE` / "currently experiencing high demand" error from Google's
+own servers. This is a transient overload on Google's side, not
+something wrong with your setup — the chatbot automatically falls back
+to the rule-based answer for that one message and should succeed again
+on the next one. If it's happening consistently rather than
+occasionally, that's worth investigating further (check your usage
+quota at https://aistudio.google.com/), but a single 503 here and there
+is normal for any live API.
 
 The chatbot is not a replacement for the trained risk models above, and
 not a replacement for a doctor.

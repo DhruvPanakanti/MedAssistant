@@ -131,6 +131,15 @@ def get_llm_reply(message):
                 # generation, and using the wrong one is a hard error,
                 # not just a warning.
                 thinking_config=_build_thinking_config(model, types),
+                # This is a single, stateless text-in/text-out call --
+                # we never give Gemini any tools/functions to call, so
+                # Automatic Function Calling has nothing to do here.
+                # Explicitly disabling it removes the SDK's "AFC is
+                # enabled" / "direct use of AFC is not recommended"
+                # console noise on every single request.
+                automatic_function_calling=types.AutomaticFunctionCallingConfig(
+                    disable=True
+                ),
             ),
         )
         text = (response.text or "").strip()
